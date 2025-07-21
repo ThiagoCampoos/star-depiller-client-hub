@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import ClientesPage from "./pages/ClientesPage";
 import AgendaPage from "./pages/AgendaPage";
 import AuthPage from "./pages/AuthPage";
+import UsuariosLayout from "./pages/UsuariosLayout";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,11 @@ const App = () => (
             <Route path="/agenda" element={
               <ProtectedRoute>
                 <AgendaPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/usuarios" element={
+              <ProtectedRoute>
+                <UsuariosLayout />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

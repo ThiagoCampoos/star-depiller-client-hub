@@ -1,4 +1,4 @@
-import { Star, User, LogOut } from "lucide-react";
+import { Star, User, LogOut, Users, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,7 +7,7 @@ import starDepillerIcon from "@/assets/star-depiller-icon.png";
 
 const Header = () => {
   const navigate = useNavigate();
-  const { signOut, user } = useAuth();
+  const { signOut, userProfile, isAdmin } = useAuth();
   const { toast } = useToast();
 
   const handleLogout = async () => {
@@ -56,12 +56,27 @@ const Header = () => {
           >
             Agenda
           </Button>
+          {isAdmin && (
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate("/usuarios")}
+              className="text-secondary-foreground hover:text-primary-glow"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Usuários
+            </Button>
+          )}
         </nav>
 
-        <div className="flex items-center space-x-2">
-          <div className="hidden md:flex items-center space-x-2 text-sm text-secondary-foreground/70">
-            <User className="w-4 h-4" />
-            <span>{user?.email}</span>
+        <div className="flex items-center space-x-3">
+          <div className="hidden md:flex items-center space-x-2 text-sm">
+            <User className="w-4 h-4 text-primary-glow" />
+            <div className="text-right">
+              <p className="text-secondary-foreground/90 font-medium">{userProfile?.nome}</p>
+              <p className="text-xs text-secondary-foreground/60">
+                {userProfile?.tipo_usuario === 'admin' ? 'Administrador' : 'Funcionário'}
+              </p>
+            </div>
           </div>
           <Button 
             variant="ghost" 
