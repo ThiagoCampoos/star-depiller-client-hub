@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import starDepillerIcon from "@/assets/star-depiller-icon.png";
 
 const AuthPage = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
@@ -20,12 +20,12 @@ const AuthPage = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(username, password);
 
     if (error) {
       toast({
         title: "Erro no login",
-        description: "Email ou senha incorretos. Verifique suas credenciais.",
+        description: "Nome de usuário ou senha incorretos. Verifique suas credenciais.",
         variant: "destructive",
       });
     } else {
@@ -62,13 +62,13 @@ const AuthPage = () => {
           <CardContent>
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="username">Nome de Usuário</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  type="text"
+                  placeholder="Seu nome de usuário"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                 />
               </div>
@@ -97,8 +97,8 @@ const AuthPage = () => {
                 <strong>Credenciais de Admin:</strong>
               </p>
               <p className="text-xs text-muted-foreground text-center">
-                Email: <code>admin@stardepiller.com</code><br />
-                Senha: <code>admin123</code>
+                Usuário: <code>admin</code><br />
+                Senha: <code>admin</code>
               </p>
             </div>
           </CardContent>

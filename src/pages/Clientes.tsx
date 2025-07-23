@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
-import { Search, Plus, Edit, Eye, Phone } from "lucide-react";
+import { Search, Plus, Edit, Eye, Phone, Calendar, MapPin, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 interface Cliente {
   id: string;
@@ -14,6 +18,7 @@ interface Cliente {
   rg_cpf: string | null;
   data_nascimento: string | null;
   idade: number | null;
+  created_at: string | null;
 }
 
 const Clientes = () => {
@@ -22,18 +27,33 @@ const Clientes = () => {
   const [filteredClientes, setFilteredClientes] = useState<Cliente[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [dataFilter, setDataFilter] = useState<string>("");
 
   useEffect(() => {
     fetchClientes();
   }, []);
+  const [cidadesDisponiveis, setCidadesDisponiveis] = useState<string[]>([]);
 
   useEffect(() => {
-    if (searchTerm.trim() === "") {
+    if (searchTerm.trim() === "" && !dataFilter) {
       setFilteredClientes(clientes);
     } else {
-      buscarClientes(searchTerm);
+      filtrarClientes();
     }
-  }, [searchTerm, clientes]);
+  }, [searchTerm, dataFilter, clientes]);
+
+  // Extrair cidades únicas para o filtro
+  // Remover completamente este useEffect:
+  // useEffect(() => {
+  //   if (clientes.length > 0) {
+  //     const cidades = clientes
+  //       .map(cliente => cliente.cidade)
+  //       .filter((cidade): cidade is string => cidade !== null && cidade !== undefined && cidade.trim() !== '')
+  //       .filter((cidade, index, self) => self.indexOf(cidade) === index)
+  //       .sort();
+  //     setCidadesDisponiveis(cidades);
+  //   }
+  // }, [clientes]);
 
   const fetchClientes = async () => {
     try {
@@ -56,6 +76,37 @@ const Clientes = () => {
     }
   };
 
+  const filtrarClientes = () => {
+    let clientesFiltrados = [...clientes];
+    
+    // Filtrar por termo de busca
+    if (searchTerm.trim() !== "") {
+      const termo = searchTerm.toLowerCase();
+      clientesFiltrados = clientesFiltrados.filter(cliente => 
+        cliente.nome.toLowerCase().includes(termo) ||
+        cliente.telefone.includes(termo) ||
+        (cliente.rg_cpf && cliente.rg_cpf.toLowerCase().includes(termo))
+      );
+    }
+    
+    // Filtrar por data de cadastro
+    if (dataFilter) {
+      const dataFiltro = new Date(dataFilter);
+      dataFiltro.setHours(0, 0, 0, 0);
+      
+      clientesFiltrados = clientesFiltrados.filter(cliente => {
+        if (!cliente.created_at) return false;
+        
+        const dataCliente = new Date(cliente.created_at);
+        dataCliente.setHours(0, 0, 0, 0);
+        
+        return dataCliente.getTime() === dataFiltro.getTime();
+      });
+    }
+    
+    setFilteredClientes(clientesFiltrados);
+  };
+
   const buscarClientes = async (termo: string) => {
     try {
       const { data, error } = await supabase
@@ -73,7 +124,8 @@ const Clientes = () => {
           cidade: item.cidade,
           rg_cpf: item.rg_cpf,
           data_nascimento: null,
-          idade: null
+          idade: null,
+          created_at: item.created_at
         }));
         setFilteredClientes(clientesMapeados);
       }
@@ -91,6 +143,10 @@ const Clientes = () => {
   const formatPhone = (phone: string) => {
     if (!phone) return '';
     return phone.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3');
+  };
+
+  const limparFiltros = () => {
+    setDataFilter("");
   };
 
   if (loading) {
@@ -122,14 +178,41 @@ const Clientes = () => {
           <CardTitle className="text-foreground">Buscar Clientes</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Busque por nome, telefone ou RG/CPF..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Busque por nome, telefone ou RG/CPF..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <div className="flex flex-wrap gap-4">
+              {/* Filtro por Data de Cadastro */}
+              <div className="flex-1 min-w-[200px]">
+                <Label htmlFor="data-filter" className="mb-2 block">Filtrar por Data de Cadastro</Label>
+                <Input
+                  id="data-filter"
+                  type="date"
+                  value={dataFilter}
+                  onChange={(e) => setDataFilter(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              
+              {/* Botão para limpar filtros */}
+              <div className="flex items-end">
+                <Button 
+                  variant="outline" 
+                  onClick={limparFiltros}
+                  className="mb-0.5"
+                >
+                  Limpar Filtros
+                </Button>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -184,6 +267,12 @@ const Clientes = () => {
                   📄 {cliente.rg_cpf}
                 </p>
               )}
+              
+              {cliente.created_at && (
+                <p className="text-sm text-muted-foreground">
+                  📅 Cadastrado em: {formatDate(cliente.created_at)}
+                </p>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -193,9 +282,9 @@ const Clientes = () => {
         <Card className="bg-gradient-elegant border-primary/20">
           <CardContent className="text-center py-12">
             <p className="text-muted-foreground text-lg">
-              {searchTerm ? 'Nenhum cliente encontrado com esses critérios.' : 'Nenhum cliente cadastrado ainda.'}
+              {searchTerm || cidadeFilter || dataFilter ? 'Nenhum cliente encontrado com esses critérios.' : 'Nenhum cliente cadastrado ainda.'}
             </p>
-            {!searchTerm && (
+            {!searchTerm && !cidadeFilter && !dataFilter && (
               <Button 
                 onClick={() => navigate('/clientes/novo')}
                 className="mt-4 bg-gradient-primary text-primary-foreground"

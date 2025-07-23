@@ -9,7 +9,13 @@ import ClientesPage from "./pages/ClientesPage";
 import AgendaPage from "./pages/AgendaPage";
 import AuthPage from "./pages/AuthPage";
 import UsuariosLayout from "./pages/UsuariosLayout";
+import ClienteForm from "./pages/ClienteForm";
+import ClienteView from "./pages/ClienteView";
+import ClienteEdit from "./pages/ClienteEdit";
+import FichaAvaliacaoForm from "./pages/FichaAvaliacaoForm";
+import FichaAvaliacaoView from "./pages/FichaAvaliacaoView";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -51,9 +57,42 @@ const App = () => (
                 <ClientesPage />
               </ProtectedRoute>
             } />
+            <Route path="/clientes/novo" element={
+              <ProtectedRoute>
+                <ClienteForm />
+              </ProtectedRoute>
+            } />
+            <Route path="/clientes/:clienteId" element={
+              <ProtectedRoute>
+                <ClienteView />
+              </ProtectedRoute>
+            } />
+            <Route path="/clientes/:clienteId/editar" element={
+              <ProtectedRoute>
+                <ClienteEdit />
+              </ProtectedRoute>
+            } />
+            <Route path="/clientes/:clienteId/ficha-avaliacao" element={
+              <ProtectedRoute>
+                <FichaAvaliacaoView />
+              </ProtectedRoute>
+            } />
+            <Route path="/clientes/:clienteId/ficha-avaliacao/criar" element={
+              <ProtectedRoute>
+                <FichaAvaliacaoForm />
+              </ProtectedRoute>
+            } />
+            <Route path="/clientes/:clienteId/ficha-avaliacao/editar" element={
+              <ProtectedRoute>
+                <FichaAvaliacaoForm />
+              </ProtectedRoute>
+            } />
+            {/* Rota da agenda com ErrorBoundary */}
             <Route path="/agenda" element={
               <ProtectedRoute>
-                <AgendaPage />
+                <ErrorBoundary>
+                  <AgendaPage />
+                </ErrorBoundary>
               </ProtectedRoute>
             } />
             <Route path="/usuarios" element={

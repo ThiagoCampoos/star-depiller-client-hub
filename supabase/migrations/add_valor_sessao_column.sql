@@ -1,0 +1,1 @@
+ALTER TABLE public.sessoes ADD COLUMN valor_sessao DECIMAL(10, 2);

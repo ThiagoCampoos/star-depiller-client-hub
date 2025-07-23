@@ -65,7 +65,8 @@ const Dashboard = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    const date = new Date(dateString);
+    return `${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
   };
 
   if (loading) {
@@ -83,12 +84,20 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground">Visão geral do sistema Star Depiller</p>
         </div>
-        <Button 
-          onClick={() => navigate('/clientes/novo')}
-          className="bg-gradient-primary text-primary-foreground"
-        >
-          Novo Cliente
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button 
+            onClick={() => navigate('/agenda')}
+            className="bg-gradient-primary text-primary-foreground"
+          >
+            Novo Agendamento
+          </Button>
+          <Button 
+            onClick={() => navigate('/clientes/novo')}
+            className="bg-gradient-primary text-primary-foreground"
+          >
+            Novo Cliente
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
