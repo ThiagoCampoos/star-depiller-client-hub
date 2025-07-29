@@ -5,13 +5,37 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://lqyfzgtqztjwzsgpnijf.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxeWZ6Z3RxenRqd3pzZ3BuaWpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3NzI0NjEsImV4cCI6MjA2ODM0ODQ2MX0.22GjICkuGEkVvcSLwRWIwJiPji-UyOm-blEyYNzIBi0";
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
+// Storage simples que sempre usa sessionStorage
+const customStorage = {
+  getItem: (key: string) => {
+    try {
+      return sessionStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (key: string, value: string) => {
+    try {
+      sessionStorage.setItem(key, value);
+    } catch {
+      // Ignora erros silenciosamente
+    }
+  },
+  removeItem: (key: string) => {
+    try {
+      sessionStorage.removeItem(key);
+    } catch {
+      // Ignora erros silenciosamente
+    }
+  }
+};
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
-    persistSession: true,
+    storage: customStorage,
+    persistSession: false, // Desabilita persistência entre sessões
     autoRefreshToken: true,
+    detectSessionInUrl: false, // Simplifica a detecção
+    flowType: 'implicit' // Usa fluxo mais simples
   }
 });

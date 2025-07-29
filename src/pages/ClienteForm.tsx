@@ -175,21 +175,23 @@ const ClienteForm = () => {
                         <FormItem>
                           <FormLabel>Sexo</FormLabel>
                           <ErrorBoundary>
-                            <Select
-                              onValueChange={field.onChange}
-                              value={field.value || ""}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="Feminino">Feminino</SelectItem>
-                                <SelectItem value="Masculino">Masculino</SelectItem>
-                                <SelectItem value="Outro">Outro</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <div translate="no">  {/* Adicione esta div com translate="no" */}
+                              <Select
+                                onValueChange={field.onChange}
+                                value={field.value || ""}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="Feminino">Feminino</SelectItem>
+                                  <SelectItem value="Masculino">Masculino</SelectItem>
+                                  <SelectItem value="Outro">Outro</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </ErrorBoundary>
                           <FormMessage />
                         </FormItem>

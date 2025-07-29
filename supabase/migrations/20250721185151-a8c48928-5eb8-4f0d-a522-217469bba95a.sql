@@ -63,18 +63,23 @@ BEFORE UPDATE ON public.user_profiles
 FOR EACH ROW
 EXECUTE FUNCTION public.update_updated_at_column();
 
--- Função para criar usuário admin automaticamente ao inserir na auth.users
+-- Função para criar um perfil de usuário para cada novo usuário
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 BEGIN
-  -- Só criar perfil se for o email admin específico
-  IF NEW.email = 'admin@stardepiller.com' THEN
-    INSERT INTO public.user_profiles (user_id, nome, email, tipo_usuario)
-    VALUES (NEW.id, 'Administrador', NEW.email, 'admin');
-  END IF;
+  INSERT INTO public.user_profiles (user_id, nome, email, tipo_usuario)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'nome', 'Novo Usuário'), -- Pega o nome dos metadados ou usa um padrão
+    NEW.email,
+    CASE 
+      WHEN NEW.email = 'admin@stardepiller.com' THEN 'admin'
+      ELSE 'funcionario'
+    END
+  );
   RETURN NEW;
 END;
 $$;

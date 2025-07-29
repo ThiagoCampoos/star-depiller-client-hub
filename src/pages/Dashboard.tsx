@@ -5,11 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface EstatisticasGerais {
   total_clientes: number;
-  total_tratamentos: number;
-  tratamentos_ativos: number;
   sessoes_hoje: number;
   total_sessoes: number;
 }
@@ -36,30 +35,63 @@ const Dashboard = () => {
     try {
       setLoading(true);
       
-      // Buscar estatísticas gerais
-      const { data: statsData, error: statsError } = await supabase
-        .from('estatisticas_gerais')
-        .select('*')
-        .single();
-
-      if (statsError) {
-        console.error('Erro ao buscar estatísticas:', statsError);
-      } else {
-        setStats(statsData);
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const dataHoje = hoje.toISOString();
+      
+      // Total de clientes
+      const { count: totalClientes, error: clientesError } = await supabase
+        .from('clientes')
+        .select('*', { count: 'exact', head: true });
+      
+      if (clientesError) {
+        console.error('Erro ao contar clientes:', clientesError);
+        toast.error("Erro ao carregar total de clientes.");
       }
-
-      // Buscar próximas sessões
+            
+      // Sessões de hoje
+      const { count: sessoesHoje, error: sessoesHojeError } = await supabase
+        .from('sessoes')
+        .select('*', { count: 'exact', head: true })
+        .gte('data_sessao', dataHoje)
+        .lt('data_sessao', new Date(hoje.getTime() + 24*60*60*1000).toISOString());
+      
+      if (sessoesHojeError) {
+        console.error('Erro ao contar sessões de hoje:', sessoesHojeError);
+        toast.error("Erro ao carregar as sessões de hoje.");
+      }
+      
+      // Total de sessões
+      const { count: totalSessoes, error: totalSessoesError } = await supabase
+        .from('sessoes')
+        .select('*', { count: 'exact', head: true });
+      
+      if (totalSessoesError) {
+        console.error('Erro ao contar total de sessões:', totalSessoesError);
+        toast.error("Erro ao carregar o total de sessões.");
+      }
+      
+      setStats({
+        total_clientes: totalClientes || 0,
+        sessoes_hoje: sessoesHoje || 0,
+        total_sessoes: totalSessoes || 0
+      });
+      
+      // Buscar próximas sessões (mantém o código original)
       const { data: sessoesData, error: sessoesError } = await supabase
         .rpc('proximas_sessoes', { dias_limite: 7 });
 
       if (sessoesError) {
         console.error('Erro ao buscar próximas sessões:', sessoesError);
+        toast.error("Erro ao buscar próximas sessões.");
       } else {
         setProximasSessoes(sessoesData || []);
       }
     } catch (error) {
       console.error('Erro geral:', error);
+      toast.error("Ocorreu um erro inesperado ao carregar os dados do dashboard.");
     } finally {
+      // Garante que o loading seja sempre definido como false
       setLoading(false);
     }
   };
@@ -106,13 +138,6 @@ const Dashboard = () => {
           value={stats?.total_clientes || 0}
           icon={Users}
           description="Clientes cadastrados"
-        />
-        <DashboardCard
-          title="Tratamentos Ativos"
-          value={stats?.tratamentos_ativos || 0}
-          icon={Activity}
-          description="Em andamento"
-          trend="up"
         />
         <DashboardCard
           title="Sessões Hoje"

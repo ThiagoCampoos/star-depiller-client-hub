@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Plus, Edit, Eye, Phone, Calendar, MapPin, Filter } from "lucide-react";
+import { Search, Plus, Edit, Eye, Phone, Calendar, MapPin, Filter, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { useToast } from "@/hooks/use-toast";
 
 interface Cliente {
   id: string;
@@ -21,13 +22,18 @@ interface Cliente {
   created_at: string | null;
 }
 
+// Remova ou comente esta linha
+// Mova esta função para dentro do componente Clientes, antes do return
+// Por exemplo, após a função limparFiltros ou antes do bloco if (loading)
 const Clientes = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [filteredClientes, setFilteredClientes] = useState<Cliente[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [dataFilter, setDataFilter] = useState<string>("");
+  const [cidadeFilter, setCidadeFilter] = useState<string>("todas");
 
   useEffect(() => {
     fetchClientes();
@@ -35,25 +41,24 @@ const Clientes = () => {
   const [cidadesDisponiveis, setCidadesDisponiveis] = useState<string[]>([]);
 
   useEffect(() => {
-    if (searchTerm.trim() === "" && !dataFilter) {
+    if (searchTerm.trim() === "" && (!dataFilter) && (cidadeFilter === "" || cidadeFilter === "todas")) {
       setFilteredClientes(clientes);
     } else {
       filtrarClientes();
     }
-  }, [searchTerm, dataFilter, clientes]);
+  }, [searchTerm, dataFilter, cidadeFilter, clientes]);
 
   // Extrair cidades únicas para o filtro
-  // Remover completamente este useEffect:
-  // useEffect(() => {
-  //   if (clientes.length > 0) {
-  //     const cidades = clientes
-  //       .map(cliente => cliente.cidade)
-  //       .filter((cidade): cidade is string => cidade !== null && cidade !== undefined && cidade.trim() !== '')
-  //       .filter((cidade, index, self) => self.indexOf(cidade) === index)
-  //       .sort();
-  //     setCidadesDisponiveis(cidades);
-  //   }
-  // }, [clientes]);
+  useEffect(() => {
+    if (clientes.length > 0) {
+      const cidades = clientes
+        .map(cliente => cliente.cidade)
+        .filter((cidade): cidade is string => cidade !== null && cidade !== undefined && cidade.trim() !== '')
+        .filter((cidade, index, self) => self.indexOf(cidade) === index)
+        .sort();
+      setCidadesDisponiveis(cidades);
+    }
+  }, [clientes]);
 
   const fetchClientes = async () => {
     try {
@@ -86,6 +91,13 @@ const Clientes = () => {
         cliente.nome.toLowerCase().includes(termo) ||
         cliente.telefone.includes(termo) ||
         (cliente.rg_cpf && cliente.rg_cpf.toLowerCase().includes(termo))
+      );
+    }
+    
+    // Filtrar por cidade
+    if (cidadeFilter && cidadeFilter !== "todas") {
+      clientesFiltrados = clientesFiltrados.filter(cliente => 
+        cliente.cidade === cidadeFilter
       );
     }
     
@@ -147,6 +159,27 @@ const Clientes = () => {
 
   const limparFiltros = () => {
     setDataFilter("");
+    setCidadeFilter("todas");
+  };
+
+  // Adicione a função handleDelete aqui
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Tem certeza que deseja excluir este cliente?")) {
+      const { error } = await supabase.from("clientes").delete().eq("id", id);
+      if (error) {
+        toast({
+          title: "Erro ao excluir cliente",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Cliente excluído",
+          description: "O cliente foi excluído com sucesso"
+        });
+        fetchClientes();
+      }
+    }
   };
 
   if (loading) {
@@ -190,6 +223,31 @@ const Clientes = () => {
             </div>
             
             <div className="flex flex-wrap gap-4">
+              {/* Filtro por Cidade */}
+              <div className="flex-1 min-w-[200px]">
+                <Label htmlFor="cidade-filter" className="mb-2 block">Filtrar por Cidade</Label>
+                <ErrorBoundary>
+                  <div translate="no">
+                    <Select
+                      value={cidadeFilter}
+                      onValueChange={setCidadeFilter}
+                    >
+                      <SelectTrigger id="cidade-filter" className="w-full">
+                        <SelectValue placeholder="Selecione uma cidade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todas">Todas as cidades</SelectItem>
+                        {cidadesDisponiveis.map((cidade) => (
+                          <SelectItem key={cidade} value={cidade}>
+                            {cidade}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </ErrorBoundary>
+              </div>
+              
               {/* Filtro por Data de Cadastro */}
               <div className="flex-1 min-w-[200px]">
                 <Label htmlFor="data-filter" className="mb-2 block">Filtrar por Data de Cadastro</Label>
@@ -223,12 +281,13 @@ const Clientes = () => {
             <CardHeader>
               <CardTitle className="text-lg text-foreground flex items-center justify-between">
                 <span>{cliente.nome}</span>
-                <div className="flex gap-2">
+                <div className="flex gap-1">
                   <Button
                     size="icon"
                     variant="ghost"
                     onClick={() => navigate(`/clientes/${cliente.id}`)}
                     className="h-8 w-8"
+                    title="Visualizar Cliente"
                   >
                     <Eye className="w-4 h-4" />
                   </Button>
@@ -237,8 +296,18 @@ const Clientes = () => {
                     variant="ghost"
                     onClick={() => navigate(`/clientes/${cliente.id}/editar`)}
                     className="h-8 w-8"
+                    title="Editar Cliente"
                   >
                     <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleDelete(cliente.id)}
+                    className="h-8 w-8 text-red-500 hover:text-red-700"
+                    title="Excluir Cliente"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </CardTitle>

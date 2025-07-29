@@ -21,6 +21,14 @@ class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("ErrorBoundary caught an error:", error, errorInfo);
+    
+    // Se for o erro específico de removeChild, podemos tentar forçar uma remontagem
+    if (error.message.includes("removeChild") && error.message.includes("Node")) {
+      // Forçar remontagem após um breve atraso
+      setTimeout(() => {
+        this.setState({ hasError: false });
+      }, 100);
+    }
   }
 
   render() {

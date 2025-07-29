@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import starDepillerIcon from "@/assets/star-depiller-icon.png";
 
 const AuthPage = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
@@ -20,12 +20,12 @@ const AuthPage = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await signIn(username, password);
+    const { error } = await signIn(email, password);
 
     if (error) {
       toast({
         title: "Erro no login",
-        description: "Nome de usuário ou senha incorretos. Verifique suas credenciais.",
+        description: "Email ou senha incorretos. Verifique suas credenciais.",
         variant: "destructive",
       });
     } else {
@@ -62,13 +62,13 @@ const AuthPage = () => {
           <CardContent>
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Nome de Usuário</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="username"
-                  type="text"
-                  placeholder="Seu nome de usuário"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
@@ -94,11 +94,10 @@ const AuthPage = () => {
             
             <div className="mt-6 p-4 bg-muted rounded-md">
               <p className="text-sm text-muted-foreground text-center mb-2">
-                <strong>Credenciais de Admin:</strong>
+                <strong>Acesso via painel Supabase</strong>
               </p>
               <p className="text-xs text-muted-foreground text-center">
-                Usuário: <code>admin</code><br />
-                Senha: <code>admin</code>
+                Use um email e senha cadastrados no seu projeto.
               </p>
             </div>
           </CardContent>

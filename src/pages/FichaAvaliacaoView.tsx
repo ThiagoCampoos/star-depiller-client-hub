@@ -36,6 +36,7 @@ interface FichaAvaliacao {
   usa_protetor_solar: boolean;
   medicamento_fotossensibilizante: boolean;
   observacoes: string | null;
+  protocolo: string | null;
   concordancia_tratamento: boolean;
   termos_explicados: boolean;
   responsavel_legal: string | null;
@@ -348,6 +349,18 @@ const FichaAvaliacaoView = () => {
               </div>
             </CardContent>
           </Card>
+          
+          {/* Adicionando a seção de Protocolo */}
+          {ficha.protocolo && (
+            <Card className="bg-gradient-elegant border-primary/20 mb-6">
+              <CardHeader>
+                <CardTitle>Protocolo</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-foreground whitespace-pre-line">{ficha.protocolo}</p>
+              </CardContent>
+            </Card>
+          )}
           
           {ficha.observacoes && (
             <Card className="bg-gradient-elegant border-primary/20 mb-6">

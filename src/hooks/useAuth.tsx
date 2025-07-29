@@ -1,12 +1,12 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 interface UserProfile {
   id: string;
   nome: string;
   email: string;
-  username: string; // Adicionando o campo username
+  username: string;
   tipo_usuario: 'admin' | 'funcionario';
   ativo: boolean;
 }
@@ -17,12 +17,12 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   isAdmin: boolean;
-  signIn: (username: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
+const AuthContext = createContext<AuthContextType>({ 
   user: null,
   session: null,
   userProfile: null,
@@ -60,149 +60,102 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         .eq('user_id', userId)
         .single();
 
-      if (error) {
-        console.error('Erro ao buscar perfil:', error);
-        setUserProfile(null);
-        setIsAdmin(false);
-      } else {
+      if (error && error.code !== 'PGRST116') {
+        console.error('Erro ao buscar perfil do usuário:', error);
+      }
+
+      if (data) {
         setUserProfile(data as UserProfile);
         setIsAdmin(data.tipo_usuario === 'admin');
+      } else {
+        setUserProfile(null);
+        setIsAdmin(false);
       }
-    } catch (error) {
-      console.error('Erro ao buscar perfil:', error);
+    } catch (e) {
+      console.error('Erro inesperado ao buscar perfil:', e);
       setUserProfile(null);
       setIsAdmin(false);
     }
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    const initializeAuth = async () => {
+      try {
+        setLoading(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+    
+        if (currentUser) {
+          await fetchUserProfile(currentUser.id);
+        }
+      } catch (error) {
+        console.error('Erro ao inicializar autenticação:', error);
+      } finally {
+        setLoading(false); // Garante que loading seja sempre definido como false
+      }
+    };
+  
+    initializeAuth();
+  
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await fetchUserProfile(session.user.id);
-        } else {
-          setUserProfile(null);
-          setIsAdmin(false); // Resetar isAdmin quando não há usuário
+        try {
+          // Apenas define o loading para eventos de login/logout, ignorando refresh de token
+          if (event !== 'TOKEN_REFRESHED' && event !== 'USER_UPDATED') {
+            setLoading(true);
+          }
+
+          setSession(session);
+          const currentUser = session?.user ?? null;
+          setUser(currentUser);
+
+          if (currentUser) {
+            await fetchUserProfile(currentUser.id);
+          } else {
+            setUserProfile(null);
+            setIsAdmin(false);
+          }
+        } catch (error) {
+          console.error('Erro no evento de mudança de autenticação:', error);
+        } finally {
+          if (event !== 'TOKEN_REFRESHED' && event !== 'USER_UPDATED') {
+            setLoading(false);
+          }
         }
-        
-        setLoading(false);
       }
     );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await fetchUserProfile(session.user.id);
-      }
-      
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+  
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const signIn = async (username: string, password: string) => {
-    try {
-      console.log('Tentando login com username:', username);
-      
-      // Buscar o perfil do usuário pelo username
-      const { data: profileData, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('*') // Selecionar todos os campos do perfil
-        .eq('username', username)
-        .single();
-      
-      console.log('Resultado da busca de perfil:', { profileData, profileError });
-      
-      if (profileError || !profileData) {
-        console.error('Erro ao buscar perfil:', profileError || 'Perfil não encontrado');
-        return { error: { message: 'Nome de usuário ou senha incorretos' } };
-      }// ❌ Pode causar problemas
-{condition && <Component />}
-
-// ✅ Melhor
-{condition ? <Component /> : null}
-      
-      // Verificar se o usuário está ativo
-      if (!profileData.ativo) {
-        console.error('Usuário inativo');
-        return { error: { message: 'Usuário inativo. Contate o administrador.' } };
-      }
-      
-      // Autenticação personalizada - verificar a senha diretamente
-      // Aqui você precisará implementar uma verificação de senha segura
-      // Por enquanto, para fins de teste, vamos usar uma verificação simples
-      if (password === 'admin' && username === 'admin') {
-        // Login bem-sucedido para o admin
-        // Criar uma sessão personalizada
-        const session = {
-          user: {
-            id: profileData.id,
-            email: profileData.email || 'admin@local',
-            user_metadata: {
-              nome: profileData.nome,
-              username: profileData.username,
-              tipo_usuario: profileData.tipo_usuario
-            }
-          }
-        };
-        
-        // Armazenar a sessão no estado
-        setUser(session.user as User);
-        setSession(session as unknown as Session);
-        setUserProfile(profileData);
-        setIsAdmin(profileData.tipo_usuario === 'admin');
-        
-        return { error: null };
-      } else {
-        // Senha incorreta
-        console.error('Senha incorreta');
-        return { error: { message: 'Nome de usuário ou senha incorretos' } };
-      }
-    } catch (error) {
-      console.error('Erro inesperado no login:', error);
-      return { error };
-    }
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    return { error };
   };
 
   const signOut = async () => {
-    // Limpar a sessão personalizada
+    // Remove a limpeza de localStorage/sessionStorage
+    // localStorage.clear();
+    // sessionStorage.clear();
+    
+    await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     setUserProfile(null);
     setIsAdmin(false);
-    
-    // Também limpar qualquer sessão do Supabase que possa existir
-    await supabase.auth.signOut();
   };
 
   const refreshProfile = async () => {
     if (!user) return;
-    
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    
-    if (error) {
-      console.error('Erro ao atualizar perfil:', error);
-      return;
-    }
-    
-    setUserProfile(data);
-    setIsAdmin(data.tipo_usuario === 'admin');
+    await fetchUserProfile(user.id);
   };
-
-  // Remover esta linha
-  // const isAdmin = userProfile?.tipo_usuario === 'admin';
 
   const value = {
     user,

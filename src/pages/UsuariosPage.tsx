@@ -79,50 +79,53 @@ const UsuariosPage = () => {
     try {
       setLoading(true);
 
-      // Criar usuário no auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Verificar se o usuário atual é admin
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('Não autorizado');
+      }
+      
+      const { data: adminProfile } = await supabase
+        .from('user_profiles')
+        .select('tipo_usuario')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (!adminProfile || adminProfile.tipo_usuario !== 'admin') {
+        throw new Error('Acesso negado - apenas administradores podem criar usuários');
+      }
+
+      // Criar usuário usando signUp
+      const { error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.senha,
+        options: {
+          data: {
+            nome: formData.nome,
+            tipo_usuario: formData.tipo_usuario
+          }
+        }
       });
 
       if (authError) {
-        toast({
-          title: "Erro",
-          description: authError.message,
-          variant: "destructive",
-        });
-        return;
+        throw new Error(authError.message);
       }
 
-      if (authData.user) {
-        // Criar perfil
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .insert({
-            user_id: authData.user.id,
-            nome: formData.nome,
-            email: formData.email,
-            tipo_usuario: formData.tipo_usuario,
-          });
-
-        if (profileError) {
-          toast({
-            title: "Erro",
-            description: "Erro ao criar perfil do usuário",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Sucesso",
-            description: "Usuário criado com sucesso",
-          });
-          setDialogOpen(false);
-          setFormData({ nome: '', email: '', senha: '', tipo_usuario: 'funcionario' });
-          fetchUsers();
-        }
-      }
+      toast({
+        title: "Sucesso",
+        description: "Usuário criado com sucesso.",
+      });
+      setDialogOpen(false);
+      setFormData({ nome: '', email: '', senha: '', tipo_usuario: 'funcionario' });
+      fetchUsers();
     } catch (error) {
       console.error('Erro:', error);
+      toast({
+        title: "Erro ao criar usuário",
+        description: error instanceof Error ? error.message : 'Ocorreu um erro desconhecido',
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
