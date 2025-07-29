@@ -1,73 +1,115 @@
-# Welcome to your Lovable project
+### 1. Visão Geral do Sistema
+O Star Depiller é um sistema de gerenciamento para clínicas de depilação, desenvolvido para facilitar o controle de clientes, agendamentos, tratamentos e usuários. O sistema oferece uma interface intuitiva e moderna, com funcionalidades específicas para o segmento de estética e depilação.
 
-## Project info
+### 2. Tecnologias Utilizadas Frontend
+- React : Biblioteca JavaScript para construção de interfaces
+- TypeScript : Superset tipado de JavaScript
+- Vite : Ferramenta de build rápida para desenvolvimento web
+- React Router : Gerenciamento de rotas na aplicação
+- React Query : Gerenciamento de estado e cache para requisições
+- React Hook Form : Gerenciamento de formulários
+- Zod : Validação de esquemas
+- Tailwind CSS : Framework CSS utilitário
+- Shadcn/UI : Componentes de UI baseados em Radix UI
+- Lucide React : Biblioteca de ícones
+- Date-fns : Biblioteca para manipulação de datas
+- Sonner : Biblioteca para notificações toast Backend
+- Supabase : Plataforma de backend como serviço (BaaS)
+  - Autenticação e autorização
+  - Banco de dados PostgreSQL
+  - Armazenamento de arquivos
+  - Funções e procedimentos armazenados Hospedagem
+- Vercel : Plataforma de hospedagem e deploy
+### 3. Estrutura do Banco de Dados Tabelas Principais
+- clientes : Armazena informações dos clientes
+- sessoes : Registra as sessões de tratamento agendadas
+- fichas_avaliacao : Contém as fichas de avaliação dos clientes
+- tratamentos : Registra os tratamentos em andamento
+- user_profiles : Armazena os perfis de usuários do sistema Visões (Views)
+- clientes_tratamentos_ativos : Exibe clientes com tratamentos ativos
+- estatisticas_gerais : Fornece estatísticas gerais do sistema Funções
+- buscar_clientes : Função para busca de clientes
+- proximas_sessoes : Função para listar próximas sessões
+### 4. Guia de Uso do Sistema 4.1 Acesso ao Sistema
+1. 1.
+   Acesse o sistema através da URL fornecida
+2. 2.
+   Na tela de login, insira seu email e senha cadastrados
+3. 3.
+   Clique em "Entrar" para acessar o sistema 4.2 Dashboard
+A tela inicial apresenta um resumo das informações importantes:
 
-**URL**: https://lovable.dev/projects/a826f982-82a7-45d4-8554-39946798c138
+- Total de clientes cadastrados
+- Sessões agendadas para hoje
+- Total de sessões realizadas
+- Lista das próximas sessões agendadas
+- Ações rápidas para cadastrar clientes e visualizar agenda 4.3 Gerenciamento de Clientes
+1. 1.
+   Listagem de Clientes
+   
+   - Acesse o menu "Clientes" para visualizar todos os clientes cadastrados
+   - Utilize a barra de busca para encontrar clientes por nome, telefone, RG ou CPF
+   - Filtre por cidade ou data de cadastro
+2. 2.
+   Cadastro de Novo Cliente
+   
+   - Clique no botão "Novo Cliente" na tela de clientes
+   - Preencha os dados do formulário (nome, telefone, cidade, data de nascimento, etc.)
+   - Clique em "Salvar" para cadastrar o cliente
+3. 3.
+   Edição de Cliente
+   
+   - Na lista de clientes, clique no botão de edição do cliente desejado
+   - Atualize as informações necessárias
+   - Clique em "Salvar" para atualizar os dados
+4. 4.
+   Exclusão de Cliente
+   
+   - Na lista de clientes, clique no botão de exclusão do cliente desejado
+   - Confirme a exclusão na caixa de diálogo 4.4 Agenda e Sessões
+1. 1.
+   Visualização da Agenda
+   
+   - Acesse o menu "Agenda" para visualizar as sessões agendadas
+   - Utilize os filtros por clínica e data para refinar a visualização
+2. 2.
+   Agendamento de Nova Sessão
+   
+   - Clique no botão "Novo Agendamento" na tela de agenda
+   - Selecione o cliente, clínica, áreas de tratamento e demais informações
+   - Defina a data e horário da sessão
+   - Clique em "Agendar" para confirmar
+3. 3.
+   Edição de Sessão
+   
+   - Na agenda, clique na sessão que deseja editar
+   - Atualize as informações necessárias
+   - Clique em "Salvar" para atualizar os dados 4.5 Gerenciamento de Usuários (Apenas Administradores)
+1. 1.
+   Listagem de Usuários
+   
+   - Acesse o menu "Usuários" para visualizar todos os usuários cadastrados
+   - Apenas administradores têm acesso a esta funcionalidade
+2. 2.
+   Cadastro de Novo Usuário
+   
+   - Clique no botão "Novo Usuário" na tela de usuários
+   - Preencha os dados do formulário (nome, email, senha, tipo de usuário)
+   - Clique em "Criar" para cadastrar o usuário
+3. 3.
+   Edição de Usuário
+   
+   - Na lista de usuários, clique no botão de edição do usuário desejado
+   - Atualize as informações necessárias
+   - Clique em "Salvar" para atualizar os dados
+### 5. Manutenção e Suporte 5.1 Backup do Banco de Dados
+O Supabase oferece backups automáticos do banco de dados. Recomenda-se também realizar backups manuais periodicamente através do painel de controle do Supabase.
+ 5.2 Atualização do Sistema
+Para atualizar o sistema:
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/a826f982-82a7-45d4-8554-39946798c138) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/a826f982-82a7-45d4-8554-39946798c138) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+1. 1.
+   Faça as alterações necessárias no código-fonte
+2. 2.
+   Realize o commit das alterações para o repositório Git
+3. 3.
+   A Vercel detectará automaticamente as alterações e realizará o deploy da nova versão
